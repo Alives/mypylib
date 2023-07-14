@@ -146,26 +146,19 @@ def user_agent():
     return f.read().strip()
 
 
-def write_graphite(data: list, prefix: str='', port: int=2003,
-                   server: str='10.0.0.2', verbose: bool=False):
+def write_graphite_entries(entries: list, port: int=2003, server: str='10.0.02',
+                           verbose: bool=False):
   datafile = '/opt/graphite_data.txt'
   try:
     with open(datafile) as f:
-      entries = f.read().splitlines()
+      prev_entries = f.read().splitlines()
   except:
-    entries = []
-  if entries:
+    prev_entries = []
+  if prev_entries:
     logging.warning('Previously unwritten graphite data is %d entries long.',
-                    len(entries))
+                    len(prev_entries))
   sock = socket.socket()
   sock.settimeout(5)
-  now = int(time.mktime(time.localtime()))
-  for name, value in data:
-    if prefix:
-      metric = '%s.%s' % (prefix, name)
-    else:
-      metric = name
-    entries.append('%s %s %d.' % (metric, value, now))
   try:
     sock.connect((server, port))
     connected = True
@@ -174,7 +167,7 @@ def write_graphite(data: list, prefix: str='', port: int=2003,
     logging.error('ERROR couldnt connect to graphite: %s', error)
     logging.error('Queueing data for later writing...')
   if connected:
-    msg = bytes('\n'.join(entries) + '\n', 'ascii')
+    msg = bytes('\n'.join(prev_entries + entries) + '\n', 'ascii')
     sock.sendall(msg)
     if verbose:
       for entry in entries:
@@ -184,3 +177,15 @@ def write_graphite(data: list, prefix: str='', port: int=2003,
     sock.close()
   with open(datafile, 'w') as f:
     f.write('\n'.join(entries))
+
+
+def write_graphite(data: list, prefix: str='', port: int=2003,
+                   server: str='10.0.0.2', verbose: bool=False):
+  now = int(time.mktime(time.localtime()))
+  for name, value in data:
+    if prefix:
+      metric = '%s.%s' % (prefix, name)
+    else:
+      metric = name
+    entries.append('%s %s %d.' % (metric, value, now))
+  write_graphite_entries(entries, port, server, verbose)
