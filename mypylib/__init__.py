@@ -146,8 +146,8 @@ def user_agent():
     return f.read().strip()
 
 
-def write_graphite_entries(entries: list, port: int=2003, server: str='10.0.02',
-                           verbose: bool=False):
+def write_graphite_entries(entries: list, port: int=2003,
+                           server: str='10.0.0.2', verbose: bool=False):
   datafile = '/opt/graphite_data.txt'
   try:
     with open(datafile) as f:
