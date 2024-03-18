@@ -99,7 +99,7 @@ def setup_logging(logfile: str, debug=False, fileinfo=True, lineno=True):
   lineno_str = ':%(lineno)-3s'
   fileinfo_str = f' %(filename)s'
   if not fileinfo:
-    fileinfo_str = ''
+    fileinfo_str = ' '
   if not lineno_str:
     lineno_str = ''
   log_formatter = logging.Formatter(
