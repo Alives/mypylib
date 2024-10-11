@@ -129,21 +129,28 @@ def setup_logging(logfile: str, debug=False, fileinfo=True, lineno=True):
   logger.addHandler(stderr_handler)
 
 
-def telegram(creds: str, msg: str):
-  with open(creds) as f:
-    data = json.load(f)
-  bot_id = data['bot_id']
-  chat_id = data['chat_id']
-  requests.post('https://api.telegram.org/bot%s/sendMessage' % bot_id,
-      params = {
-        'chat_id': chat_id,
-        'disable_web_page_preview': True,
-        'text': msg})
-
-
 def user_agent():
   with open('/opt/user_agent.txt') as f:
     return f.read().strip()
+
+
+def write_graphite(data: list, prefix: str='', port: int=2003,
+                   server: str='10.0.0.2', verbose: bool=False):
+  entries = []
+  if len(data[0]) == 3:
+    for name, value, ts in data:
+      metric = name
+      if prefix:
+        metric = f'{prefix}.{name}'
+      entries.append(f'{metric} {value} {ts}.')
+  else:
+    now = int(time.mktime(time.localtime()))
+    for name, value in data:
+      metric = name
+      if prefix:
+        metric = f'{prefix}.{name}'
+      entries.append(f'{metric} {value} {now}.')
+  write_graphite_entries(entries, port, server, verbose)
 
 
 def write_graphite_entries(entries: list, port: int=2003,
@@ -177,15 +184,3 @@ def write_graphite_entries(entries: list, port: int=2003,
     sock.close()
   with open(datafile, 'w') as f:
     f.write('\n'.join(entries))
-
-
-def write_graphite(data: list, prefix: str='', port: int=2003,
-                   server: str='10.0.0.2', verbose: bool=False):
-  now = int(time.mktime(time.localtime()))
-  for name, value in data:
-    if prefix:
-      metric = '%s.%s' % (prefix, name)
-    else:
-      metric = name
-    entries.append('%s %s %d.' % (metric, value, now))
-  write_graphite_entries(entries, port, server, verbose)
