@@ -95,16 +95,14 @@ def send_email(from_addr, to_addrs, subject, body, fixedwidth=False,
     logging.error(repr(result))
 
 
-def setup_logging(logfile: str, debug=False, fileinfo=True, lineno=True):
-  lineno_str = ':%(lineno)-3s'
-  fileinfo_str = f' %(filename)s'
-  if not fileinfo:
-    fileinfo_str = ' '
-  if not lineno_str:
-    lineno_str = ''
+def setup_logging(logfile: str, debug=False, fileinfo=False, lineno=True):
+  log_fmt = '%(levelname).1s%(asctime)s'
+  if fileinfo:
+    log_fmt += ' %(filename)s'
+  if lineno:
+    log_fmt += ' %(lineno)-3s'
   log_formatter = logging.Formatter(
-      f'%(levelname).1s%(asctime)s{fileinfo_str}{lineno_str}]  %(message)s',
-      datefmt='%Y-%m-%d_%H:%M:%S')
+      log_fmt + ']  %(message)s', datefmt='%Y-%m-%d_%H:%M:%S')
   logger = logging.getLogger()
   logger.setLevel(logging.INFO)
   if debug:
